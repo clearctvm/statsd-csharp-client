@@ -55,6 +55,11 @@ namespace StatsdClient
 			return new MetricsTimer(name);
 		}
 
+		public static IDisposable StartTimer(string name, int payload)
+		{
+			return new MetricsTimer(name, payload: payload);
+		}
+
 		public static void Time(Action action, string statName, double sampleRate=1) 
 		{
 			if (_statsD == null)

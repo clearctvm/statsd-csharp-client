@@ -8,12 +8,14 @@ namespace StatsdClient
 		private readonly Stopwatch _stopWatch;
 		private bool _disposed;
 	    private readonly double _sampleRate = 1;
+		private readonly int payload;
 
-	    public MetricsTimer(string name, double sampleRate=1)
+		public MetricsTimer(string name, double sampleRate = 1, int payload = 0)
 		{
 			_name = name;
             _sampleRate = sampleRate;
-			_stopWatch = new Stopwatch();
+		    this.payload = payload;
+		    _stopWatch = new Stopwatch();
 			_stopWatch.Start();
 		}
 
@@ -23,7 +25,7 @@ namespace StatsdClient
 			{
 				_disposed = true;
 				_stopWatch.Stop();
-				Metrics.Timer(_name, _stopWatch.ElapsedMilliseconds(), _sampleRate);
+				Metrics.Timer(_name, _stopWatch.ElapsedMilliseconds() + payload, _sampleRate);
 			}
 		}
 	}

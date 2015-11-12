@@ -5,7 +5,10 @@ using System.Text;
 
 namespace StatsdClient
 {
-    public class StatsdUDP : IDisposable, IStatsdUDP
+	using System.Threading;
+	using Configuration;
+
+	public class StatsdUDP : IDisposable, IStatsdUDP
     {
         private int MaxUDPPacketSize { get; set; } // In bytes; default is MetricsConfig.DefaultStatsdMaxUDPPacketSize.
                                                    // Set to zero for no limit.
@@ -45,10 +48,28 @@ namespace StatsdClient
 
         public void Send(string command)
         {
-            Send(Encoding.ASCII.GetBytes(command));
+			if (AsyncSwitch.IsOn)
+				SendAsync(command);
+			else
+				Send(Encoding.ASCII.GetBytes(command));
         }
 
-        private void Send(byte[] encodedCommand)
+		private void SendAsync(string command)
+		{
+			ThreadPool.QueueUserWorkItem((state) =>
+			{
+				try
+				{
+					Send(Encoding.ASCII.GetBytes(command));
+				}
+				catch (Exception e)
+				{
+					System.Diagnostics.Trace.TraceError("Error sending metric. Exception: {0}", e);
+				}
+			});
+		}
+
+		private void Send(byte[] encodedCommand)
         {
             if (MaxUDPPacketSize > 0 && encodedCommand.Length > MaxUDPPacketSize)
             {
